@@ -12,6 +12,7 @@ import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { BoardModule } from './modules/board/board.module';
 import { ListModule } from './modules/list/list.module';
+import { CardModule } from './modules/card/card.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ListModule } from './modules/list/list.module';
     AuthModule,
     BoardModule,
     ListModule,
+    CardModule,
   ],
 })
 export class AppModule {}
