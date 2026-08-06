@@ -13,6 +13,8 @@ import { Request } from 'express';
 import { BoardService } from './board.service';
 import { BoardDto, UpdateBoardDto } from './dto/board.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AddUserToBoardDto } from './dto/board-member.dto';
+import { BoardMemberRole } from './entities/board-member.entity';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -55,5 +57,38 @@ export class BoardController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.boardService.getBoardDetail(boardId, request.user.sub);
+  }
+
+  @Post(':boardId/members')
+  addUserToBoard(
+    @Param('boardId') boardId: string,
+    @Req() req,
+    @Body() dto: AddUserToBoardDto,
+  ) {
+    return this.boardService.addUserToBoard(boardId, req.user.sub, dto);
+  }
+
+  @Delete(':boardId/members/:userId')
+  removeUserFromBoard(
+    @Param('boardId') boardId: string,
+    @Param('userId') userId: string,
+    @Req() req,
+  ) {
+    return this.boardService.removeUserFromBoard(boardId, req.user.sub, userId);
+  }
+
+  @Patch(':boardId/members/:userId/role')
+  updateMemberRole(
+    @Param('boardId') boardId: string,
+    @Param('userId') userId: string,
+    @Body('role') role: BoardMemberRole,
+    @Req() req,
+  ) {
+    return this.boardService.updateMemberRole(
+      boardId,
+      req.user.sub,
+      userId,
+      role,
+    );
   }
 }

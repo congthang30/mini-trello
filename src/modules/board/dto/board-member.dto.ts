@@ -2,9 +2,9 @@ import { IsEnum, IsString } from 'class-validator';
 import { BoardMemberRole } from '../entities/board-member.entity';
 
 export class AddUserToBoardDto {
-  @IsString()
-  userId!: string;
+  @IsEmail()
+  email!: string;
 
-  @IsEnum(['member', 'viewer'])
+  @IsEnum(BoardMemberRole)
   role!: BoardMemberRole;
 }
