@@ -51,9 +51,7 @@ export class OtpService {
   private hashOtp(email: string, otp: string): string {
     const secret = this.configService.getOrThrow<string>('OTP_SECRET');
 
-    return createHmac('sha256', secret)
-      .update(`${email}:${otp}`)
-      .digest('hex');
+    return createHmac('sha256', secret).update(`${email}:${otp}`).digest('hex');
   }
 
   async sendOtp(rawEmail: string): Promise<{ message: string }> {
@@ -72,10 +70,7 @@ export class OtpService {
     const oneMinute = 60 * 1000;
     const oneHour = 60 * 60 * 1000;
 
-    if (
-      oldData &&
-      nowMs - oldData.lastSentAt.toMillis() < oneMinute
-    ) {
+    if (oldData && nowMs - oldData.lastSentAt.toMillis() < oneMinute) {
       throw new HttpException(
         'Vui lòng chờ 60 giây trước khi gửi lại OTP',
         HttpStatus.TOO_MANY_REQUESTS,
@@ -83,8 +78,7 @@ export class OtpService {
     }
 
     const isSameHour =
-      oldData &&
-      nowMs - oldData.windowStartedAt.toMillis() < oneHour;
+      oldData && nowMs - oldData.windowStartedAt.toMillis() < oneHour;
 
     const sendCount = isSameHour ? oldData.sendCount + 1 : 1;
 
@@ -96,19 +90,16 @@ export class OtpService {
     }
 
     const otp = this.generateOtp();
-    const expiresMinutes =
-      this.configService.get<number>('OTP_EXPIRES_MINUTES') ?? 5;
+    const expiresMinutes = Number(
+      this.configService.get<string>('OTP_EXPIRES_MINUTES') ?? '5',
+    );
 
     const otpData: OtpDocument = {
       email,
       otpHash: this.hashOtp(email, otp),
-      expiresAt: Timestamp.fromMillis(
-        nowMs + expiresMinutes * 60 * 1000,
-      ),
+      expiresAt: Timestamp.fromMillis(nowMs + expiresMinutes * 60 * 1000),
       lastSentAt: now,
-      windowStartedAt: isSameHour
-        ? oldData.windowStartedAt
-        : now,
+      windowStartedAt: isSameHour ? oldData.windowStartedAt : now,
       sendCount,
       attempts: 0,
     };
@@ -151,9 +142,7 @@ export class OtpService {
     const snapshot = await documentReference.get();
 
     if (!snapshot.exists) {
-      throw new BadRequestException(
-        'OTP không tồn tại hoặc đã được sử dụng',
-      );
+      throw new BadRequestException('OTP không tồn tại hoặc đã được sử dụng');
     }
 
     const data = snapshot.data() as OtpDocument;

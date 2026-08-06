@@ -11,10 +11,7 @@ export class OtpController {
   }
 
   @Post('verify')
-  verifyOtp(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
-  ) {
+  verifyOtp(@Body('email') email: string, @Body('otp') otp: string) {
     return this.otpService.verifyOtp(email, otp);
   }
 }

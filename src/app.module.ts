@@ -8,17 +8,20 @@ import appConfig from './config/app.config';
 import firebaseConfig from './config/firebase.config';
 import mailConfig from './config/mail.config';
 import { OtpModule } from './modules/otp/otp.module';
+import jwtConfig from './config/jwt.config';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
 
-      load: [appConfig, firebaseConfig, mailConfig],
+      load: [appConfig, firebaseConfig, mailConfig, jwtConfig],
     }),
     FirebaseModule,
     MailModule,
     OtpModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
