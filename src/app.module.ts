@@ -10,6 +10,7 @@ import mailConfig from './config/mail.config';
 import { OtpModule } from './modules/otp/otp.module';
 import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { BoardModule } from './modules/board/board.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AuthModule } from './modules/auth/auth.module';
     MailModule,
     OtpModule,
     AuthModule,
+    BoardModule,
   ],
 })
 export class AppModule {}

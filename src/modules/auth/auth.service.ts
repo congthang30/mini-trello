@@ -6,20 +6,30 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import {
+  CollectionReference,
+  Firestore,
+  getFirestore,
+  Timestamp,
+} from 'firebase-admin/firestore';
 import { OtpService } from '../otp/otp.service';
 import { UserEntity } from './entities/user.entity';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class AuthService {
-  private readonly firestore = getFirestore();
-  private readonly usersCollection = this.firestore.collection('users');
+  private readonly firestore: Firestore;
+  private readonly usersCollection: CollectionReference;
 
   constructor(
+    private readonly firebaseService: FirebaseService,
     private readonly otpService: OtpService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+    this.firestore = this.firebaseService.getDB();
+    this.usersCollection = this.firestore.collection('users');
+  }
 
   private normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
