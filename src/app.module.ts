@@ -11,6 +11,7 @@ import { OtpModule } from './modules/otp/otp.module';
 import jwtConfig from './config/jwt.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { BoardModule } from './modules/board/board.module';
+import { ListModule } from './modules/list/list.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { BoardModule } from './modules/board/board.module';
     OtpModule,
     AuthModule,
     BoardModule,
+    ListModule,
   ],
 })
 export class AppModule {}

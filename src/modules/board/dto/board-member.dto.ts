@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsString } from 'class-validator';
 import { BoardMemberRole } from '../entities/board-member.entity';
 
 export class AddUserToBoardDto {
