@@ -1,6 +1,10 @@
 import { Timestamp } from 'firebase-admin/firestore';
 
-export type BoardMemberRole = 'owner' | 'member';
+export enum BoardMemberRole {
+  OWNER = 'owner',
+  MEMBER = 'member',
+  VIEWER = 'viewer',
+}
 
 export interface BoardMemberEntity {
   id: string;
