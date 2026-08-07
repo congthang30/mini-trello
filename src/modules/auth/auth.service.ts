@@ -14,7 +14,7 @@ import {
 } from 'firebase-admin/firestore';
 import { OtpService } from '../otp/otp.service';
 import { UserEntity } from './entities/user.entity';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { LoginDto, LoginWithOtpDto, RegisterDto } from './dto/auth.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
@@ -121,6 +121,41 @@ export class AuthService {
 
     return {
       message: 'Đăng nhập thành công',
+      accessToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    };
+  }
+
+  async sendLoginOtp(rawEmail: string) {
+    const email = this.normalizeEmail(rawEmail);
+    const user = await this.findUserByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('Tài khoản không tồn tại');
+    }
+
+    return this.otpService.sendOtp(email);
+  }
+
+  async loginWithOtp(dto: LoginWithOtpDto) {
+    const email = this.normalizeEmail(dto.email);
+    const user = await this.findUserByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('Email hoặc OTP không chính xác');
+    }
+
+    await this.otpService.verifyOtp(email, dto.otp);
+
+    const accessToken = this.createAccessToken(user);
+
+    return {
+      message: 'Đăng nhập bằng OTP thành công',
       accessToken,
       user: {
         id: user.id,

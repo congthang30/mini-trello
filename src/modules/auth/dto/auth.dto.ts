@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Length, MinLength } from 'class-validator';
+import { IsEmail, IsString, Length, Matches, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -24,4 +24,20 @@ export class LoginDto {
   @IsString()
   @MinLength(8)
   password!: string;
+}
+
+export class SendLoginOtpDto {
+  @IsEmail({}, { message: 'Email không hợp lệ' })
+  email!: string;
+}
+
+export class LoginWithOtpDto {
+  @IsEmail({}, { message: 'Email không hợp lệ' })
+  email!: string;
+
+  @IsString()
+  @Matches(/^\d{6}$/, {
+    message: 'OTP phải gồm 6 chữ số',
+  })
+  otp!: string;
 }
