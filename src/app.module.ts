@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BoardModule } from './modules/board/board.module';
 import { ListModule } from './modules/list/list.module';
 import { CardModule } from './modules/card/card.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CardModule } from './modules/card/card.module';
     BoardModule,
     ListModule,
     CardModule,
+    UserModule,
   ],
 })
 export class AppModule {}
