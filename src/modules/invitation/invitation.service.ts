@@ -134,4 +134,314 @@ export class InvitationService {
       invitation,
     };
   }
+
+  async getMyInvitations(userId: string, status?: BoardInvitationStatus) {
+    let query = this.invitationsCollection.where('inviteeId', '==', userId);
+
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.get();
+
+    const invitations = snapshot.docs
+      .map(
+        (document) =>
+          ({
+            ...document.data(),
+            id: document.id,
+          }) as BoardInvitationEntity,
+      )
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
+    return Promise.all(
+      invitations.map(async (invitation) => {
+        const [boardDocument, inviterDocument] = await Promise.all([
+          this.boardsCollection.doc(invitation.boardId).get(),
+          this.usersCollection.doc(invitation.inviterId).get(),
+        ]);
+
+        const board = boardDocument.data() as BoardEntity | undefined;
+
+        const inviter = inviterDocument.data() as UserEntity | undefined;
+
+        return {
+          ...invitation,
+          board: board
+            ? {
+                id: boardDocument.id,
+                name: board.name,
+              }
+            : null,
+          inviter: inviter
+            ? {
+                id: inviterDocument.id,
+                name: inviter.name,
+                email: inviter.email,
+              }
+            : null,
+        };
+      }),
+    );
+  }
+
+  async getBoardInvitations(
+    boardId: string,
+    ownerId: string,
+    status?: BoardInvitationStatus,
+  ) {
+    const boardDocument = await this.boardsCollection.doc(boardId).get();
+
+    if (!boardDocument.exists) {
+      throw new NotFoundException('Không tìm thấy bảng');
+    }
+
+    const board = boardDocument.data() as BoardEntity;
+
+    if (board.ownerId !== ownerId) {
+      throw new ForbiddenException(
+        'Bạn không có quyền xem lời mời của bảng này',
+      );
+    }
+
+    let query = this.invitationsCollection.where('boardId', '==', boardId);
+
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.get();
+
+    const invitations = snapshot.docs
+      .map(
+        (document) =>
+          ({
+            ...document.data(),
+            id: document.id,
+          }) as BoardInvitationEntity,
+      )
+      .sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
+    return Promise.all(
+      invitations.map(async (invitation) => {
+        const inviteeDocument = await this.usersCollection
+          .doc(invitation.inviteeId)
+          .get();
+
+        const invitee = inviteeDocument.data() as UserEntity | undefined;
+
+        return {
+          ...invitation,
+          invitee: invitee
+            ? {
+                id: inviteeDocument.id,
+                name: invitee.name,
+                email: invitee.email,
+              }
+            : null,
+        };
+      }),
+    );
+  }
+
+  async getInvitationDetail(invitationId: string, userId: string) {
+    const invitationDocument = await this.invitationsCollection
+      .doc(invitationId)
+      .get();
+
+    if (!invitationDocument.exists) {
+      throw new NotFoundException('Không tìm thấy lời mời');
+    }
+
+    const invitation = {
+      ...invitationDocument.data(),
+      id: invitationDocument.id,
+    } as BoardInvitationEntity;
+
+    if (invitation.inviterId !== userId && invitation.inviteeId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền xem lời mời này');
+    }
+
+    const [boardDocument, inviterDocument, inviteeDocument] = await Promise.all(
+      [
+        this.boardsCollection.doc(invitation.boardId).get(),
+        this.usersCollection.doc(invitation.inviterId).get(),
+        this.usersCollection.doc(invitation.inviteeId).get(),
+      ],
+    );
+
+    const board = boardDocument.data() as BoardEntity | undefined;
+
+    const inviter = inviterDocument.data() as UserEntity | undefined;
+
+    const invitee = inviteeDocument.data() as UserEntity | undefined;
+
+    return {
+      ...invitation,
+      board: board
+        ? {
+            id: boardDocument.id,
+            name: board.name,
+          }
+        : null,
+      inviter: inviter
+        ? {
+            id: inviterDocument.id,
+            name: inviter.name,
+            email: inviter.email,
+          }
+        : null,
+      invitee: invitee
+        ? {
+            id: inviteeDocument.id,
+            name: invitee.name,
+            email: invitee.email,
+          }
+        : null,
+    };
+  }
+
+  async acceptInvitation(
+    invitationId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const invitationReference = this.invitationsCollection.doc(invitationId);
+
+    const memberReference = this.membersCollection.doc();
+
+    await this.firestore.runTransaction(async (transaction) => {
+      const invitationDocument = await transaction.get(invitationReference);
+
+      if (!invitationDocument.exists) {
+        throw new NotFoundException('Không tìm thấy lời mời');
+      }
+
+      const invitation = invitationDocument.data() as BoardInvitationEntity;
+
+      if (invitation.inviteeId !== userId) {
+        throw new ForbiddenException('Lời mời này không thuộc về bạn');
+      }
+
+      if (invitation.status !== BoardInvitationStatus.PENDING) {
+        throw new BadRequestException('Lời mời đã được xử lý');
+      }
+
+      if (invitation.role === BoardMemberRole.OWNER) {
+        throw new BadRequestException('Quyền thành viên không hợp lệ');
+      }
+
+      const boardReference = this.boardsCollection.doc(invitation.boardId);
+
+      const boardDocument = await transaction.get(boardReference);
+
+      if (!boardDocument.exists) {
+        throw new NotFoundException('Không tìm thấy bảng');
+      }
+
+      const memberQuery = this.membersCollection
+        .where('boardId', '==', invitation.boardId)
+        .where('userId', '==', userId)
+        .limit(1);
+
+      const memberSnapshot = await transaction.get(memberQuery);
+
+      const now = Timestamp.now();
+
+      transaction.update(invitationReference, {
+        status: BoardInvitationStatus.ACCEPTED,
+        respondedAt: now,
+      });
+
+      if (memberSnapshot.empty) {
+        const member: BoardMemberEntity = {
+          id: memberReference.id,
+          boardId: invitation.boardId,
+          userId,
+          role: invitation.role,
+          joinedAt: now,
+        };
+
+        transaction.set(memberReference, member);
+      }
+    });
+
+    return {
+      message: 'Chấp nhận lời mời thành công',
+    };
+  }
+
+  async declineInvitation(
+    invitationId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const invitationReference = this.invitationsCollection.doc(invitationId);
+
+    await this.firestore.runTransaction(async (transaction) => {
+      const invitationDocument = await transaction.get(invitationReference);
+
+      if (!invitationDocument.exists) {
+        throw new NotFoundException('Không tìm thấy lời mời');
+      }
+
+      const invitation = invitationDocument.data() as BoardInvitationEntity;
+
+      if (invitation.inviteeId !== userId) {
+        throw new ForbiddenException('Lời mời này không thuộc về bạn');
+      }
+
+      if (invitation.status !== BoardInvitationStatus.PENDING) {
+        throw new BadRequestException('Lời mời đã được xử lý');
+      }
+
+      transaction.update(invitationReference, {
+        status: BoardInvitationStatus.DECLINED,
+        respondedAt: Timestamp.now(),
+      });
+    });
+
+    return {
+      message: 'Từ chối lời mời thành công',
+    };
+  }
+
+  async cancelInvitation(
+    invitationId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const invitationReference = this.invitationsCollection.doc(invitationId);
+
+    await this.firestore.runTransaction(async (transaction) => {
+      const invitationDocument = await transaction.get(invitationReference);
+
+      if (!invitationDocument.exists) {
+        throw new NotFoundException('Không tìm thấy lời mời');
+      }
+
+      const invitation = invitationDocument.data() as BoardInvitationEntity;
+
+      const boardReference = this.boardsCollection.doc(invitation.boardId);
+
+      const boardDocument = await transaction.get(boardReference);
+
+      if (!boardDocument.exists) {
+        throw new NotFoundException('Không tìm thấy bảng');
+      }
+
+      const board = boardDocument.data() as BoardEntity;
+
+      if (board.ownerId !== userId) {
+        throw new ForbiddenException('Bạn không có quyền hủy lời mời này');
+      }
+
+      if (invitation.status !== BoardInvitationStatus.PENDING) {
+        throw new BadRequestException('Chỉ có thể hủy lời mời đang chờ');
+      }
+
+      transaction.delete(invitationReference);
+    });
+
+    return {
+      message: 'Hủy lời mời thành công',
+    };
+  }
 }
