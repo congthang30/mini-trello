@@ -13,15 +13,6 @@ export class RegisterDto {
   otp!: string;
 }
 
-export class LoginDto {
-  @IsEmail()
-  email!: string;
-
-  @IsString()
-  @MinLength(8)
-  password!: string;
-}
-
 export class SendLoginOtpDto {
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email!: string;

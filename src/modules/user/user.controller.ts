@@ -34,4 +34,9 @@ export class UserController {
   updateUser(@Body() dto: UpdateUserDto, @Req() request: AuthenticatedRequest) {
     return this.userService.updateUser(request.user.sub, dto);
   }
+
+  @Get(':id')
+  getUserById(@Param('id') id: string) {
+    return this.userService.getUser(id);
+  }
 }
