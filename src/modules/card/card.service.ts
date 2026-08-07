@@ -65,7 +65,7 @@ export class CardService {
       .get();
 
     if (snapshot.empty) {
-      throw new ForbiddenException('Bạn không có quyền tạo thẻ trong bảng này');
+      throw new ForbiddenException('Bạn không có quyền truy cập bảng này');
     }
   }
 
@@ -323,5 +323,32 @@ export class CardService {
     await this.checkBoardAccess(card.boardId, userId);
 
     return card;
+  }
+
+  async getCardsByBoard(
+    boardId: string,
+    userId: string,
+  ): Promise<CardEntity[]> {
+    await this.checkBoardAccess(boardId, userId);
+
+    const snapshot = await this.cardsCollection
+      .where('boardId', '==', boardId)
+      .get();
+
+    return snapshot.docs
+      .map(
+        (document) =>
+          ({
+            ...document.data(),
+            id: document.id,
+          }) as CardEntity,
+      )
+      .sort((a, b) => {
+        if (a.listId === b.listId) {
+          return a.position - b.position;
+        }
+
+        return a.listId.localeCompare(b.listId);
+      });
   }
 }

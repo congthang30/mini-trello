@@ -69,4 +69,12 @@ export class CardController {
   ) {
     return this.cardService.deleteCard(cardId, request.user.sub);
   }
+
+  @Get('boards/:boardId/cards')
+  getCardsByBoard(
+    @Param('boardId') boardId: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.cardService.getCardsByBoard(boardId, request.user.sub);
+  }
 }
