@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { compare, hash } from 'bcrypt';
 import {
   CollectionReference,
   Firestore,
@@ -14,7 +13,7 @@ import {
 } from 'firebase-admin/firestore';
 import { OtpService } from '../otp/otp.service';
 import { UserEntity } from './entities/user.entity';
-import { LoginDto, LoginWithOtpDto, RegisterDto } from './dto/auth.dto';
+import { LoginWithOtpDto, RegisterDto } from './dto/auth.dto';
 import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
@@ -68,7 +67,6 @@ export class AuthService {
 
     await this.otpService.verifyOtp(email, dto.otp);
 
-    const passwordHash = await hash(dto.password, 12);
     const userReference = this.usersCollection.doc();
     const now = Timestamp.now();
 
@@ -76,7 +74,6 @@ export class AuthService {
       id: userReference.id,
       name,
       email,
-      passwordHash,
       role: 'user',
       emailVerified: true,
       createdAt: now,
@@ -93,34 +90,6 @@ export class AuthService {
 
     return {
       message: 'Đăng ký tài khoản thành công',
-      accessToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    };
-  }
-
-  async login(dto: LoginDto) {
-    const email = this.normalizeEmail(dto.email);
-    const user = await this.findUserByEmail(email);
-
-    if (!user) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
-    }
-
-    const passwordIsCorrect = await compare(dto.password, user.passwordHash);
-
-    if (!passwordIsCorrect) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
-    }
-
-    const accessToken = this.createAccessToken(user);
-
-    return {
-      message: 'Đăng nhập thành công',
       accessToken,
       user: {
         id: user.id,

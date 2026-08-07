@@ -6,7 +6,6 @@ export interface UserEntity {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
   role: UserRole;
   emailVerified: boolean;
   createdAt: Timestamp;
