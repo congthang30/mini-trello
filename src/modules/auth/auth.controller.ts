@@ -6,17 +6,17 @@ import { LoginWithOtpDto, RegisterDto, SendLoginOtpDto } from './dto/auth.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
+  @Post('signup')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
-  @Post('login/otp/send')
+  @Post('signin/otp/send')
   sendLoginOtp(@Body() dto: SendLoginOtpDto) {
     return this.authService.sendLoginOtp(dto.email);
   }
 
-  @Post('login/signin')
+  @Post('signin')
   loginWithOtp(@Body() dto: LoginWithOtpDto) {
     return this.authService.loginWithOtp(dto);
   }
