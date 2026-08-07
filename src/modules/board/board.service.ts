@@ -330,4 +330,32 @@ export class BoardService {
       },
     };
   }
+
+  async getBoards(userId: string): Promise<BoardEntity[]> {
+  const memberSnapshot = await this.boardMembersCollection
+    .where('userId', '==', userId)
+    .get();
+
+  if (memberSnapshot.empty) {
+    return [];
+  }
+
+  const boardIds = memberSnapshot.docs.map(
+    (document) =>
+      (document.data() as BoardMemberEntity).boardId,
+  );
+
+  const boardDocuments = await Promise.all(
+    boardIds.map((boardId) =>
+      this.boardsCollection.doc(boardId).get(),
+    ),
+  );
+
+  return boardDocuments
+    .filter((document) => document.exists)
+    .map((document) => ({
+      ...document.data(),
+      id: document.id,
+    })) as BoardEntity[];
+}
 }

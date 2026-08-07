@@ -91,4 +91,9 @@ export class BoardController {
       role,
     );
   }
+
+  @Get()
+  getBoards(@Req() request: AuthenticatedRequest) {
+    return this.boardService.getBoards(request.user.sub);
+  }
 }
