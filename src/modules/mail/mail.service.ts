@@ -52,4 +52,20 @@ export class MailService {
     `,
     });
   }
+
+  async sendBoardInvitation(email: string, boardName: string): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.configService.get<string>('mail.from'),
+      to: email,
+      subject: `Lời mời tham gia bảng ${boardName}`,
+      html: `
+      <h2>Bạn được mời tham gia bảng</h2>
+      <p>Bảng: <strong>${boardName}</strong></p>
+      <p>Đăng nhập Mini Trello để chấp nhận hoặc từ chối lời mời.</p>
+      <a href="http://localhost:5173/invitations">
+        Xem lời mời
+      </a>
+    `,
+    });
+  }
 }
