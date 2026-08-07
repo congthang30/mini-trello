@@ -6,11 +6,7 @@ import { InvitationController } from './invitation.controller';
 import { InvitationService } from './invitation.service';
 
 @Module({
-  imports: [
-    FirebaseModule,
-    AuthModule,
-    MailModule,
-  ],
+  imports: [FirebaseModule, AuthModule, MailModule],
   controllers: [InvitationController],
   providers: [InvitationService],
   exports: [InvitationService],

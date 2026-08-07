@@ -14,6 +14,7 @@ import { BoardModule } from './modules/board/board.module';
 import { ListModule } from './modules/list/list.module';
 import { CardModule } from './modules/card/card.module';
 import { UserModule } from './modules/user/user.module';
+import { InvitationModule } from './modules/invitation/invitation.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UserModule } from './modules/user/user.module';
     ListModule,
     CardModule,
     UserModule,
+    InvitationModule,
   ],
 })
 export class AppModule {}

@@ -11,7 +11,7 @@ import {
 } from 'firebase-admin/firestore';
 import { FirebaseService } from '../firebase/firebase.service';
 import { CreateCardDto, MoveCardDto, UpdateCardDto } from './dto/card.dto';
-import { CardEntity } from './entities/card.entity';
+import { CardEntity, CardPriority } from './entities/card.entity';
 import { ListEntity } from '../list/entities/list.entity';
 
 @Injectable()
@@ -106,6 +106,7 @@ export class CardService {
       title: dto.title.trim(),
       description: dto.description?.trim() ?? '',
       position,
+      priority: dto.priority ?? CardPriority.MEDIUM,
       createdBy: userId,
       createdAt: now,
       updatedAt: now,
@@ -152,10 +153,15 @@ export class CardService {
       updates.dueDate = Timestamp.fromDate(new Date(dto.dueDate));
     }
 
+    if (dto.priority !== undefined) {
+      updates.priority = dto.priority;
+    }
+
     if (
       dto.title === undefined &&
       dto.description === undefined &&
-      dto.dueDate === undefined
+      dto.dueDate === undefined &&
+      dto.priority === undefined
     ) {
       throw new BadRequestException('Không có dữ liệu cần cập nhật');
     }

@@ -7,23 +7,15 @@ import { getFirestore } from 'firebase-admin/firestore';
 export class FirebaseService {
   private firestore;
 
-  constructor(
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     if (getApps().length === 0) {
       initializeApp({
         credential: cert({
-          projectId: this.configService.get<string>(
-            'firebase.projectId',
-          ),
+          projectId: this.configService.get<string>('firebase.projectId'),
 
-          clientEmail: this.configService.get<string>(
-            'firebase.clientEmail',
-          ),
+          clientEmail: this.configService.get<string>('firebase.clientEmail'),
 
-          privateKey: this.configService.get<string>(
-            'firebase.privateKey',
-          ),
+          privateKey: this.configService.get<string>('firebase.privateKey'),
         }),
       });
     }

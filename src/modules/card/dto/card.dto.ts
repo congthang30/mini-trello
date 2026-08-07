@@ -1,5 +1,6 @@
 import {
   IsDateString,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -7,6 +8,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { CardPriority } from '../entities/card.entity';
 
 export class CreateCardDto {
   @IsString()
@@ -15,12 +17,15 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(2000)
   description?: string;
 
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsEnum(CardPriority)
+  priority?: CardPriority;
 }
 
 export class UpdateCardDto {
@@ -37,6 +42,10 @@ export class UpdateCardDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsEnum(CardPriority)
+  priority?: CardPriority;
 }
 
 export class MoveCardDto {

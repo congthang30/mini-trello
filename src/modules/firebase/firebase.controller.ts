@@ -3,12 +3,10 @@ import { FirebaseService } from './firebase.service';
 
 @Controller('firebase')
 export class FirebaseController {
-    constructor(
-        private readonly firebaseService: FirebaseService,
-    ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
-    @Get('test')
-    test() {
-        return this.firebaseService.test();
-    }
+  @Get('test')
+  test() {
+    return this.firebaseService.test();
+  }
 }
