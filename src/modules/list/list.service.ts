@@ -71,19 +71,15 @@ export class ListService {
   ): Promise<{ message: string; list: ListEntity }> {
     await this.checkBoardAccess(boardId, userId);
 
-    const latestListSnapshot = await this.listsCollection
+    const snapshot = await this.listsCollection
       .where('boardId', '==', boardId)
-      .orderBy('position', 'desc')
-      .limit(1)
       .get();
 
-    let position = 1;
+    const maxPosition = snapshot.docs.reduce((max, document) => {
+      const list = document.data() as ListEntity;
 
-    if (!latestListSnapshot.empty) {
-      const latestList = latestListSnapshot.docs[0].data() as ListEntity;
-
-      position = latestList.position + 1;
-    }
+      return Math.max(max, list.position ?? 0);
+    }, 0);
 
     const listReference = this.listsCollection.doc();
     const now = Timestamp.now();
@@ -92,7 +88,7 @@ export class ListService {
       id: listReference.id,
       boardId,
       title: dto.title.trim(),
-      position,
+      position: maxPosition + 1,
       createdAt: now,
       updatedAt: now,
     };
